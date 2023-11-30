@@ -8,9 +8,8 @@ const print = std.debug.print;
 
 pub fn main() !void {
     const input = @embedFile("sample.txt");
-    var it = std.mem.splitSequence(u8, input, "\n");
+    var it = std.mem.tokenizeAny(u8, input, "\n");
     while (it.next()) |line| {
-        if (line.len == 0) continue;
         print("{s}\n", .{line});
     }
 }
