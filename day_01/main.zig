@@ -1,6 +1,5 @@
 const std = @import("std");
 const print = std.debug.print;
-const Allocator = std.mem.Allocator;
 
 const Digit = struct {
     pattern: []const u8,
@@ -30,27 +29,22 @@ const letters = [_]Digit{
 };
 const all = digits ++ letters;
 
-fn getDigit(allocator: Allocator, line: []const u8, pattern: []const Digit) !i32 {
-    // TODO: is there a better way to create a dynamic string?
-    var buf = std.ArrayList(u8).init(allocator);
-    defer buf.deinit();
-
+fn getDigit(line: []const u8, pattern: []const Digit) i32 {
     var first: i32 = -1;
     var second: i32 = 0;
-    var buf_idx: usize = 0;
+    var start_idx: usize = 0;
 
     // TODO: Time complexity could be better
-    for (line) |ch| {
-        try buf.append(ch);
+    for (line, 0..) |_, end_idx| {
         for (pattern) |digit| {
             // TODO: what is the best way to find the string?
-            if (std.mem.indexOf(u8, buf.items[buf_idx..], digit.pattern)) |idx| {
+            if (std.mem.indexOf(u8, line[start_idx .. end_idx + 1], digit.pattern)) |idx| {
                 const value = digit.value;
                 if (first == -1) {
                     first = value;
                 }
                 second = value;
-                buf_idx += idx + 1;
+                start_idx += idx + 1;
             }
         }
     }
@@ -59,30 +53,23 @@ fn getDigit(allocator: Allocator, line: []const u8, pattern: []const Digit) !i32
 
 pub fn main() !void {
     const input = @embedFile("input.txt");
-
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     var part1: i32 = 0;
     var part2: i32 = 0;
     var it = std.mem.tokenizeAny(u8, input, "\n");
     while (it.next()) |line| {
-        part1 += try getDigit(allocator, line, &digits);
-        part2 += try getDigit(allocator, line, &all);
+        part1 += getDigit(line, &digits);
+        part2 += getDigit(line, &all);
     }
-
     print("part1 = {d}\n", .{part1});
     print("part2 = {d}\n", .{part2});
 }
 
 test "sample" {
     const input = @embedFile("sample.txt");
-    const allocator = std.testing.allocator;
     var result: i32 = 0;
     var it = std.mem.tokenizeAny(u8, input, "\n");
     while (it.next()) |line| {
-        result += try getDigit(allocator, line, &digits);
+        result += try getDigit(line, &digits);
     }
     try std.testing.expect(result == 142);
 }
