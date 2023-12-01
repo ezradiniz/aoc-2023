@@ -37,7 +37,7 @@ fn getDigit(line: []const u8, pattern: []const Digit) i32 {
     // TODO: Time complexity could be better
     for (line, 0..) |_, end_idx| {
         for (pattern) |digit| {
-            // TODO: what is the best way to find the string?
+            // TODO: What is the best way to find the string?
             if (std.mem.indexOf(u8, line[start_idx .. end_idx + 1], digit.pattern)) |idx| {
                 const value = digit.value;
                 if (first == -1) {
@@ -45,6 +45,7 @@ fn getDigit(line: []const u8, pattern: []const Digit) i32 {
                 }
                 second = value;
                 start_idx += idx + 1;
+                break;
             }
         }
     }
@@ -69,7 +70,7 @@ test "sample" {
     var result: i32 = 0;
     var it = std.mem.tokenizeAny(u8, input, "\n");
     while (it.next()) |line| {
-        result += try getDigit(line, &digits);
+        result += getDigit(line, &digits);
     }
     try std.testing.expect(result == 142);
 }
