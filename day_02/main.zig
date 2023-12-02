@@ -7,13 +7,6 @@ const Cube = struct {
     blue: usize = 0,
 };
 
-fn max(a: usize, b: usize) usize {
-    if (a > b) {
-        return a;
-    }
-    return b;
-}
-
 pub fn main() !void {
     const input = @embedFile("input.txt");
     var it = std.mem.tokenizeAny(u8, input, "\n");
@@ -50,15 +43,15 @@ pub fn main() !void {
                         switch (c[0]) {
                             'r' => {
                                 cubes1.red += amount;
-                                cubes2.red = max(cubes2.red, amount);
+                                cubes2.red = @max(cubes2.red, amount);
                             },
                             'g' => {
                                 cubes1.green += amount;
-                                cubes2.green = max(cubes2.green, amount);
+                                cubes2.green = @max(cubes2.green, amount);
                             },
                             'b' => {
                                 cubes1.blue += amount;
-                                cubes2.blue = max(cubes2.blue, amount);
+                                cubes2.blue = @max(cubes2.blue, amount);
                             },
                             else => unreachable,
                         }
