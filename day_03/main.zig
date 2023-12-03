@@ -100,12 +100,13 @@ fn sumAllGearRatios(alloc: Allocator, grid: ArrayList([]const u8)) !usize {
             if (num != 0 and (j + 1 == m or !isDigit(grid.items[i][j + 1]))) {
                 var it = adj_gears.keyIterator();
                 while (it.next()) |key| {
-                    const k = [2]usize{ key[0], key[1] };
-                    // TODO: how to avoid creating a new array/slice?
-                    if (gears.get(k)) |v| {
-                        try gears.put(k, [2]usize{ v[0] + 1, v[1] * num });
+                    var v = try gears.getOrPut(key.*);
+                    if (!v.found_existing) {
+                        v.value_ptr.* = [2]usize{ 1, num };
                     } else {
-                        try gears.put(k, [2]usize{ 1, num });
+                        var value = &v.value_ptr.*;
+                        value[0] += 1;
+                        value[1] *= num;
                     }
                 }
             }
