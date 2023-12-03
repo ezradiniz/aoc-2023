@@ -76,11 +76,14 @@ fn sumAllPartNumbers(grid: ArrayList([]const u8)) usize {
 
 fn sumAllGearRatios(alloc: Allocator, grid: ArrayList([]const u8)) !usize {
     const m: usize = grid.items[0].len;
+    // TODO: is tuple better in this case?
     var gears = std.AutoHashMap([2]usize, [2]usize).init(alloc);
     defer gears.deinit();
 
     for (grid.items, 0..) |row, i| {
         var num: usize = 0;
+        // NOTE: In my input there is no gear adjacent to more than 2 numbers,
+        // for this case this intermediate HashMap is not needed.
         // NOTE: This is a Set / HashSet in Zig
         var adj_gears = std.AutoHashMap([2]usize, void).init(alloc);
         defer adj_gears.deinit();
