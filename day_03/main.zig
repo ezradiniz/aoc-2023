@@ -39,7 +39,7 @@ fn isAdjacentToSymbol(grid: ArrayList([]const u8), i: usize, j: usize) bool {
     return false;
 }
 
-fn addAdjacentGears(grid: ArrayList([]const u8), hm: *AutoHashMap([2]usize, void), i: usize, j: usize) !void {
+fn getAdjacentGear(grid: ArrayList([]const u8), i: usize, j: usize) ?[2]usize {
     const m: usize = grid.items.len;
     const n: usize = grid.items[0].len;
     for (directions) |dx| {
@@ -47,9 +47,10 @@ fn addAdjacentGears(grid: ArrayList([]const u8), hm: *AutoHashMap([2]usize, void
         const nj = @as(i32, @intCast(j)) + dx[1];
         if (ni >= 0 and ni < m and nj >= 0 and nj < n and isGearSymbol(grid.items[@as(usize, @intCast(ni))][@as(usize, @intCast(nj))])) {
             // TODO: is there a better way to cast the number?
-            try hm.put([2]usize{ @as(usize, @intCast(ni)), @as(usize, @intCast(nj)) }, {});
+            return [2]usize{ @as(usize, @intCast(ni)), @as(usize, @intCast(nj)) };
         }
     }
+    return null;
 }
 
 fn sumAllPartNumbers(grid: ArrayList([]const u8)) usize {
@@ -82,28 +83,22 @@ fn sumAllGearRatios(alloc: Allocator, grid: ArrayList([]const u8)) !usize {
 
     for (grid.items, 0..) |row, i| {
         var num: usize = 0;
-        // NOTE: In my input there is no gear adjacent to more than 2 numbers,
-        // for this case this intermediate HashMap is not needed.
-        // NOTE: This is a Set / HashSet in Zig
-        var adj_gears = std.AutoHashMap([2]usize, void).init(alloc);
-        defer adj_gears.deinit();
-
+        var gear: ?[2]usize = null;
         for (row, 0..) |col, j| {
             if (isDigit(col)) {
                 num = num * 10 + (col - '0');
-                try addAdjacentGears(grid, &adj_gears, i, j);
-            } else {
-                num = 0;
-                // TODO: how to clear items in the HashMap?
-                var it = adj_gears.keyIterator();
-                while (it.next()) |key| {
-                    adj_gears.removeByPtr(key);
+                if (gear == null) {
+                    if (getAdjacentGear(grid, i, j)) |adj_gear| {
+                        gear = adj_gear;
+                    }
                 }
+            } else {
+                gear = null;
+                num = 0;
             }
             if (num != 0 and (j + 1 == m or !isDigit(grid.items[i][j + 1]))) {
-                var it = adj_gears.keyIterator();
-                while (it.next()) |key| {
-                    var v = try gears.getOrPut(key.*);
+                if (gear) |gear_key| {
+                    var v = try gears.getOrPut(gear_key);
                     if (!v.found_existing) {
                         v.value_ptr.* = [2]usize{ 1, num };
                     } else {
