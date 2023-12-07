@@ -10,6 +10,17 @@ const SeedRange = struct {
     end: usize,
 };
 
+const Map = struct {
+    dst: usize,
+    src: usize,
+    len: usize,
+};
+
+fn compareMap(context: void, a: Map, b: Map) bool {
+    _ = context;
+    return b.src > a.src;
+}
+
 fn appendSeeds(arr: *ArrayList(usize), input: []const u8) !void {
     var s = std.mem.tokenizeAny(u8, input, ":");
     _ = s.next();
@@ -72,7 +83,6 @@ fn findSeedLocation(alloc: Allocator, input: []const u8) !usize {
     return result;
 }
 
-// NOTE: I don't think this solution works for all inputs
 fn findSeedRangeLocation(alloc: Allocator, input: []const u8) !usize {
     var seeds = ArrayList(SeedRange).init(alloc);
     defer seeds.deinit();
@@ -86,38 +96,45 @@ fn findSeedRangeLocation(alloc: Allocator, input: []const u8) !usize {
         var new_seeds = ArrayList(SeedRange).init(alloc);
         defer new_seeds.deinit();
 
+        var mapping = ArrayList(Map).init(alloc);
+        defer mapping.deinit();
+
         while (it.next()) |line| {
             if (line.len == 0) break;
-            // NOTE: These ranges must be sorted first to avoid bugs
             var range = std.mem.tokenizeAny(u8, line, " ");
             const dst = try std.fmt.parseInt(usize, range.next().?, 10);
             const src = try std.fmt.parseInt(usize, range.next().?, 10);
             const len = try std.fmt.parseInt(usize, range.next().?, 10);
+            try mapping.append(Map{ .dst = dst, .src = src, .len = len });
+        }
 
-            const range_start = src;
-            const range_end = src + len - 1;
+        std.mem.sort(Map, mapping.items, {}, compareMap);
+
+        for (mapping.items) |map| {
+            const range_start = map.src;
+            const range_end = map.src + map.len - 1;
 
             var i: usize = seeds.items.len;
             while (i > 0) : (i -= 1) {
                 const seed = seeds.items[i - 1];
                 if (range_start <= seed.start and seed.end <= range_end) {
                     try new_seeds.append(SeedRange{
-                        .start = dst + (seed.start - range_start),
-                        .end = dst + (seed.end - range_start),
+                        .start = map.dst + (seed.start - range_start),
+                        .end = map.dst + (seed.end - range_start),
                     });
                     _ = seeds.swapRemove(i - 1);
                 } else if (seed.start <= range_start and range_start <= seed.end and seed.end <= range_end) {
                     try new_seeds.append(SeedRange{
-                        .start = dst,
-                        .end = dst + (seed.end - range_start),
+                        .start = map.dst,
+                        .end = map.dst + (seed.end - range_start),
                     });
                     const iseed = &seeds.items[i - 1];
                     iseed.*.start = seed.start;
                     iseed.*.end = range_start - 1;
                 } else if (range_start <= seed.start and seed.start <= range_end and range_end <= seed.end) {
                     try new_seeds.append(SeedRange{
-                        .start = dst + (seed.start - range_start),
-                        .end = dst + (range_end - range_start),
+                        .start = map.dst + (seed.start - range_start),
+                        .end = map.dst + (range_end - range_start),
                     });
                     const iseed = &seeds.items[i - 1];
                     iseed.*.start = range_end + 1;
