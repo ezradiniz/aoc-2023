@@ -72,6 +72,7 @@ fn findSeedLocation(alloc: Allocator, input: []const u8) !usize {
     return result;
 }
 
+// NOTE: I don't think this solution works for all inputs
 fn findSeedRangeLocation(alloc: Allocator, input: []const u8) !usize {
     var seeds = ArrayList(SeedRange).init(alloc);
     defer seeds.deinit();
@@ -87,6 +88,7 @@ fn findSeedRangeLocation(alloc: Allocator, input: []const u8) !usize {
 
         while (it.next()) |line| {
             if (line.len == 0) break;
+            // NOTE: These ranges must be sorted first to avoid bugs
             var range = std.mem.tokenizeAny(u8, line, " ");
             const dst = try std.fmt.parseInt(usize, range.next().?, 10);
             const src = try std.fmt.parseInt(usize, range.next().?, 10);
