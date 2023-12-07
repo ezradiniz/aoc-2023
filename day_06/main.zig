@@ -14,6 +14,7 @@ fn calcRaces(races: []const Race) usize {
     return result;
 }
 
+// NOTE: Binary search is not required for this problem
 fn countWaysToWin(race: Race) usize {
     var left: usize = 1;
     var right: usize = 0;
