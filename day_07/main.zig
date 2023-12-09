@@ -28,6 +28,7 @@ fn lessThanHands(card_labels: [13]u8, a: Hand, b: Hand) bool {
         return @intFromEnum(a.type) <= @intFromEnum(b.type);
     }
     for (a.cards, b.cards) |c1, c2| {
+        // TODO: Use indexOfScalar
         const i = std.mem.indexOfAny(u8, &card_labels, &[_]u8{c1}).?;
         const j = std.mem.indexOfAny(u8, &card_labels, &[_]u8{c2}).?;
         if (i == j) continue;
