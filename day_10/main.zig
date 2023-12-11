@@ -197,16 +197,17 @@ fn countEnclosedTiles(alloc: Allocator, grid: [][]const u8) !i32 {
             if (pipes_set.contains(Pos{ .x = x, .y = y })) { // Main
                 // NOTE: i.e line ---
                 if (cur == '-') continue;
-                // NOTE: i.e ] [
-                if (!((prev == 'F' and cur == 'J') or (prev == 'L' and cur == '7'))) {
-                    count += 1;
-                }
-                is_inside = @mod(count, 2) == 1;
+                // NOTE: i.e v--^
+                if (prev == 'F' and cur == 'J') continue;
+                // NOTE: i.e ^--v
+                if (prev == 'L' and cur == '7') continue;
+                count += 1;
             } else { // Other Tiles
                 if (is_inside) {
                     result += 1;
                 }
             }
+            is_inside = @mod(count, 2) == 1;
             prev = cur;
         }
     }
@@ -235,4 +236,41 @@ pub fn main() !void {
     print("part2: {d}\n", .{part2});
 }
 
-// TODO: Add tests
+test "sample 1 - part 01" {
+    const input = @embedFile("sample1.txt");
+    const test_allocator = std.testing.allocator;
+    var grid = ArrayList([]const u8).init(test_allocator);
+    defer grid.deinit();
+    var it = std.mem.tokenizeAny(u8, input, "\n");
+    while (it.next()) |line| {
+        try grid.append(line);
+    }
+    const result = try findMaxDist(test_allocator, grid.items);
+    try std.testing.expectEqual(result, 4);
+}
+
+test "sample 2 - part 02" {
+    const input = @embedFile("sample2.txt");
+    const test_allocator = std.testing.allocator;
+    var grid = ArrayList([]const u8).init(test_allocator);
+    defer grid.deinit();
+    var it = std.mem.tokenizeAny(u8, input, "\n");
+    while (it.next()) |line| {
+        try grid.append(line);
+    }
+    const result = try countEnclosedTiles(test_allocator, grid.items);
+    try std.testing.expectEqual(result, 8);
+}
+
+test "sample 3 - part 02" {
+    const input = @embedFile("sample3.txt");
+    const test_allocator = std.testing.allocator;
+    var grid = ArrayList([]const u8).init(test_allocator);
+    defer grid.deinit();
+    var it = std.mem.tokenizeAny(u8, input, "\n");
+    while (it.next()) |line| {
+        try grid.append(line);
+    }
+    const result = try countEnclosedTiles(test_allocator, grid.items);
+    try std.testing.expectEqual(result, 10);
+}
